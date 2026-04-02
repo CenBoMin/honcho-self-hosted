@@ -257,5 +257,78 @@ else
     echo "  cp $CONFIG_DIR/honcho-config.json ~/.honcho/config.json"
 fi
 
+# --- MCP server (optional) ---
+echo ""
+read -rp "Set up Honcho MCP server? (exposes memory tools to Claude Code/Desktop) [y/N]: " SETUP_MCP
+
+if [ "$SETUP_MCP" = "y" ] || [ "$SETUP_MCP" = "Y" ]; then
+    # Check for Node.js
+    if ! command -v node &>/dev/null; then
+        echo "  Node.js not found. Install it first:"
+        echo "    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -"
+        echo "    sudo apt-get install -y nodejs"
+        echo "  Then re-run this script."
+    elif ! command -v bun &>/dev/null && ! [ -x "$HOME/.bun/bin/bun" ]; then
+        echo "  Bun not found. Install it first:"
+        echo "    curl -fsSL https://bun.sh/install | bash"
+        echo "  Then re-run this script."
+    else
+        BUN="${HOME}/.bun/bin/bun"
+        command -v bun &>/dev/null && BUN="bun"
+
+        echo "  Setting up MCP server..."
+        cd "$INSTALL_DIR/mcp"
+
+        # Patch to use local Honcho
+        sed -i 's|https://api.honcho.dev|http://localhost:8000|' src/config.ts
+
+        "$BUN" install --silent 2>&1 | tail -3
+
+        MCP_PORT=8787
+
+        # Create systemd service
+        cat > /tmp/honcho-mcp.service << SVCEOF
+[Unit]
+Description=Honcho MCP Server
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=$INSTALL_DIR/mcp
+ExecStart=/usr/bin/npx wrangler dev --port $MCP_PORT --ip 0.0.0.0
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+        if sudo -n true 2>/dev/null; then
+            sudo cp /tmp/honcho-mcp.service /etc/systemd/system/
+            sudo systemctl daemon-reload
+            sudo systemctl enable --now honcho-mcp
+            echo "  MCP server running on port $MCP_PORT (systemd service)"
+        else
+            echo "  Systemd service file written to /tmp/honcho-mcp.service"
+            echo "  Install it with:"
+            echo "    sudo cp /tmp/honcho-mcp.service /etc/systemd/system/"
+            echo "    sudo systemctl daemon-reload"
+            echo "    sudo systemctl enable --now honcho-mcp"
+        fi
+
+        echo ""
+        echo "  To connect Claude Code (from this machine):"
+        echo "    claude mcp add --transport http honcho http://localhost:$MCP_PORT \\"
+        echo "      --header \"Authorization: Bearer local\" \\"
+        echo "      --header \"X-Honcho-User-Name: \$USER\" \\"
+        echo "      --header \"X-Honcho-Workspace-ID: hermes\""
+        echo ""
+        echo "  From a remote machine, tunnel first:"
+        echo "    ssh -f -N -L $MCP_PORT:localhost:$MCP_PORT user@this-server"
+    fi
+fi
+
 echo ""
 echo "Done! Honcho is running on localhost:8000"
