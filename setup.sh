@@ -105,12 +105,12 @@ else
 
         echo ""
         echo "  You need to set model names in config.toml to match your server."
-        echo "  Example: for Ollama, use model names like 'qwen2.5:32b' or 'llama3.3:70b'"
+        echo "  Use model names from your server (e.g. Ollama: 'qwen3:32b', vLLM: 'Qwen/Qwen3-32B')"
         echo ""
-        read -rp "  Model name for light tasks (deriver, summary) [qwen2.5:32b]: " LIGHT_MODEL
-        LIGHT_MODEL="${LIGHT_MODEL:-qwen2.5:32b}"
+        read -rp "  Model name for light tasks (deriver, summary) [qwen3:32b]: " LIGHT_MODEL
+        LIGHT_MODEL="${LIGHT_MODEL:-qwen3:32b}"
 
-        read -rp "  Model name for heavy tasks (dream, max dialectic) [qwen2.5:32b]: " HEAVY_MODEL
+        read -rp "  Model name for heavy tasks (dream, max dialectic) [qwen3:32b]: " HEAVY_MODEL
         HEAVY_MODEL="${HEAVY_MODEL:-$LIGHT_MODEL}"
 
         {

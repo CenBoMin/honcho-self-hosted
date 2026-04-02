@@ -209,22 +209,24 @@ MODEL = "claude-sonnet-4-6"
 
 For maximum privacy, run a local model instead of a cloud API. Any server with an OpenAI-compatible endpoint works.
 
+Local servers have different model catalogs than cloud APIs, so model names will differ. The setup script asks you for the model name your server provides.
+
 ### Ollama (easiest)
 
 ```bash
 # Install Ollama on this machine or another on your LAN
 curl -fsSL https://ollama.com/install.sh | sh
 
-# Pull a model with good function calling
-ollama pull qwen2.5:32b
+# Pull a model — 32B+ recommended for reliable function calling
+ollama pull qwen3:32b
 ```
 
 Then run the setup script and choose option 2 (Local / LAN):
 
 ```
 Server URL: http://localhost:11434/v1
-Model name for light tasks: qwen2.5:32b
-Model name for heavy tasks: qwen2.5:32b
+Model name for light tasks: qwen3:32b
+Model name for heavy tasks: qwen3:32b
 ```
 
 For a separate LAN machine, use its IP: `http://192.168.x.x:11434/v1`
@@ -233,10 +235,10 @@ For a separate LAN machine, use its IP: `http://192.168.x.x:11434/v1`
 
 ```bash
 # Serve a model with tool calling support
-vllm serve Qwen/Qwen2.5-32B-Instruct --port 8001 --enable-auto-tool-choice
+vllm serve Qwen/Qwen3-32B --port 8001 --enable-auto-tool-choice
 ```
 
-Setup: `http://localhost:8001/v1` with model name `Qwen/Qwen2.5-32B-Instruct`
+Setup: `http://localhost:8001/v1` with model name `Qwen/Qwen3-32B`
 
 ### Considerations
 
