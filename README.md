@@ -4,6 +4,26 @@ Self-host [Honcho](https://github.com/plastic-labs/honcho) (Plastic Labs' memory
 
 **No fork required** — just 3 config files on top of upstream Honcho.
 
+## Background: Hermes L4 Memory
+
+Hermes Agent has a 4-layer memory system. Layer 2 (L4's cross-session memory) is powered by [Honcho](https://github.com/plastic-labs/honcho), which builds a deepening model of the user across conversations — extracting observations, recalling context, consolidating memories over time.
+
+By default, Hermes uses Plastic Labs' managed cloud ([honcho.dev](https://honcho.dev)) + their Neuromancer models. This works out of the box but means your conversation data and user profile live on their servers.
+
+## Deployment Options
+
+| Option | Data location | LLM for memory | Setup | Cost |
+|--------|--------------|----------------|-------|------|
+| **Managed cloud** (default) | Plastic Labs servers | Neuromancer (Plastic Labs) | None — built into Hermes | Free tier / paid |
+| **Self-hosted + API** (this repo) | Your VM | Any OpenAI-compatible API (OpenRouter, Venice, etc.) | ~3 minutes | API usage only |
+| **Self-hosted + local model** | Your VM | Local LLM (Ollama, vLLM on LAN) | More setup | Hardware only |
+
+**Managed cloud** — Zero setup. Best for getting started. Your data is on Plastic Labs' infrastructure.
+
+**Self-hosted + API** — This repo. Your data stays on your VM. LLM calls go to a cloud API for inference only — the provider sees request content but doesn't store your memory data. Best balance of privacy and capability.
+
+**Self-hosted + local model** — Maximum privacy. No data leaves your network. Requires a GPU or capable CPU on your LAN running an inference server (Ollama, vLLM, llama.cpp). Set `LLM_VLLM_BASE_URL` to your local server. Trade-off: smaller models may produce lower quality observations and reasoning than cloud APIs.
+
 ## What this does
 
 - Runs Honcho's full memory stack (API, Deriver, PostgreSQL, Redis) on your VM
