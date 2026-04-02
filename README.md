@@ -350,8 +350,16 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
 ```bash
 cd ~/honcho
 docker compose down
-git pull            # our config files are untracked by upstream, no conflicts
+git checkout mcp/src/config.ts  # restore upstream MCP file if patched
+git pull
 docker compose up -d --build
+```
+
+If you use the MCP server, re-apply the patch after pulling:
+
+```bash
+sed -i 's|https://api.honcho.dev|http://localhost:8000|' mcp/src/config.ts
+sudo systemctl restart honcho-mcp
 ```
 
 **View logs:**
