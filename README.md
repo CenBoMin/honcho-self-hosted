@@ -35,10 +35,11 @@ Hermes Agent ──► localhost:8000 (self-hosted Honcho API)
 ## Quick Start
 
 ```bash
-curl -sL https://raw.githubusercontent.com/elkimek/honcho-self-hosted/main/setup.sh | bash
+curl -sL https://raw.githubusercontent.com/elkimek/honcho-self-hosted/main/setup.sh -o /tmp/setup.sh
+bash /tmp/setup.sh
 ```
 
-This installs Docker (if needed), clones Honcho, copies configs, prompts for API keys, starts everything, and configures Hermes. One command, ~3 minutes.
+This installs Docker (if needed), clones Honcho, copies configs, prompts for API keys, starts everything, and configures Hermes. ~3 minutes.
 
 ## Manual Setup
 
@@ -169,9 +170,7 @@ MODEL = "claude-sonnet-4-6"
 ```bash
 cd ~/honcho
 docker compose down
-git stash          # stash our config files
-git pull
-git stash pop      # restore config files
+git pull            # our config files are untracked by upstream, no conflicts
 docker compose up -d --build
 ```
 
