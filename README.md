@@ -123,6 +123,13 @@ Hermes will now use your local Honcho instead of `api.honcho.dev`.
 
 ## Model Configuration
 
+Honcho has 4 background components that use LLM calls:
+
+- **Deriver** — Reads every message and extracts observations about the user ("prefers Python", "privacy-focused"). Memory formation.
+- **Dialectic** — Answers questions about the user on demand, with 5 reasoning levels (minimal → max). Memory recall.
+- **Summary** — Compresses long sessions into short/long summaries to keep context manageable.
+- **Dream** — Runs every ~8 hours. Merges redundant observations, deletes outdated ones, infers higher-level patterns. Memory consolidation.
+
 LLM calls are tiered by task complexity. Default models (change in `config.toml`):
 
 | Component | Model | When it runs |
