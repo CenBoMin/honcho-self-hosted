@@ -113,6 +113,13 @@ else
         read -rp "  Model name for heavy tasks (dream, max dialectic) [glm-4.7-flash]: " HEAVY_MODEL
         HEAVY_MODEL="${HEAVY_MODEL:-$LIGHT_MODEL}"
 
+        echo ""
+        echo "  Embeddings require a cloud API (local servers can't serve the embedding model)."
+        echo "  You can use a free/cheap key from OpenRouter or OpenAI just for embeddings,"
+        echo "  or press Enter to disable embeddings (vector search won't work)."
+        echo ""
+        read -rp "  Embedding API key (or Enter to disable): " EMBED_KEY
+
         {
             echo "# Local / LAN LLM provider"
             echo "LLM_VLLM_API_KEY=${LOCAL_KEY}"
@@ -120,13 +127,30 @@ else
             echo ""
             echo "# Needed for client initialization"
             echo "LLM_OPENAI_API_KEY=${LOCAL_KEY}"
-            echo ""
-            echo "# Embeddings routed through same local server"
-            echo "LLM_OPENAI_COMPATIBLE_API_KEY=${LOCAL_KEY}"
         } > "$INSTALL_DIR/.env"
 
-        # Update config.toml with local models and URL
-        sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${LOCAL_URL}\"|" "$INSTALL_DIR/config.toml"
+        if [ -n "$EMBED_KEY" ]; then
+            read -rp "  Embedding API base URL [https://openrouter.ai/api/v1]: " EMBED_URL
+            EMBED_URL="${EMBED_URL:-https://openrouter.ai/api/v1}"
+            {
+                echo ""
+                echo "# Embeddings via cloud API (local server can't serve embedding models)"
+                echo "LLM_OPENAI_COMPATIBLE_API_KEY=${EMBED_KEY}"
+            } >> "$INSTALL_DIR/.env"
+            sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${EMBED_URL}\"|" "$INSTALL_DIR/config.toml"
+        else
+            # Disable embeddings entirely
+            sed -i 's|EMBED_MESSAGES = true|EMBED_MESSAGES = false|' "$INSTALL_DIR/config.toml"
+            sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${LOCAL_URL}\"|" "$INSTALL_DIR/config.toml"
+            {
+                echo ""
+                echo "LLM_OPENAI_COMPATIBLE_API_KEY=${LOCAL_KEY}"
+            } >> "$INSTALL_DIR/.env"
+            echo "  Embeddings disabled. Honcho will work but vector search won't be available."
+        fi
+
+        # Remove backup provider refs (local = single provider)
+        sed -i '/^BACKUP_PROVIDER/d; /^BACKUP_MODEL/d' "$INSTALL_DIR/config.toml"
 
         # Replace all model names — light tier
         sed -i "s|\"z-ai/glm-4.7-flash\"|\"${LIGHT_MODEL}\"|g" "$INSTALL_DIR/config.toml"
@@ -139,10 +163,6 @@ else
         # Heavy tier
         sed -i "s|\"z-ai/glm-5\"|\"${HEAVY_MODEL}\"|g" "$INSTALL_DIR/config.toml"
         sed -i "s|\"zai-org-glm-5\"|\"${HEAVY_MODEL}\"|g" "$INSTALL_DIR/config.toml"
-
-        # Embeddings: local servers may not support text-embedding-3-small
-        # Switch to "openai" provider which will use the primary key
-        sed -i 's|EMBEDDING_PROVIDER = "openrouter"|EMBEDDING_PROVIDER = "openai"|' "$INSTALL_DIR/config.toml"
 
         echo "  Configured for local inference at ${LOCAL_URL}"
 

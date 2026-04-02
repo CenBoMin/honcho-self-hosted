@@ -23,8 +23,8 @@ It scores 86.9% on the LoCoMo memory benchmark vs. 69.6% for base Qwen3-8B and 8
 | Option | Privacy | Data location | LLM for memory | Setup | Cost |
 |--------|---------|--------------|----------------|-------|------|
 | **Managed cloud** (default) | Low — data + inference on 3rd party | Plastic Labs servers | Neuromancer (Plastic Labs) | None — built into Hermes | Free tier / paid |
-| **Self-hosted + API** (this repo) | Medium — data on your machine, inference via API | Your VM | Any OpenAI-compatible API | ~3 minutes | API usage only |
-| **Self-hosted + local model** | High — nothing leaves your network | Your VM | Local LLM (Ollama, vLLM) | More setup | Hardware only |
+| **Self-hosted + API** (this repo) | Medium — data on your machine, inference via API | Your machine | Any OpenAI-compatible API | ~3 minutes | API usage only |
+| **Self-hosted + local model** | High — nothing leaves your network | Your machine | Local LLM (Ollama, vLLM) | More setup | Hardware only |
 
 **Managed cloud** — Zero setup. Best for getting started. Your data is on Plastic Labs' infrastructure.
 
@@ -250,8 +250,9 @@ Setup: `http://localhost:8001/v1` with model name `THUDM/GLM-4.7-Flash`
 ### Considerations
 
 - **Model size matters** — Honcho's agents need reliable function calling and structured JSON. Models under 14B may miss tool calls or malform output. 32B+ recommended.
-- **Embeddings** — local servers may not serve embedding models. The script switches to the `"openai"` embedding provider. If your server supports embeddings, you can change `EMBEDDING_PROVIDER` in `config.toml`.
+- **Embeddings need a cloud API** — Honcho uses `openai/text-embedding-3-small` for vector embeddings, which local servers can't serve. The setup script asks for a separate cloud API key for embeddings (e.g. a free OpenRouter key), or lets you disable embeddings entirely (Honcho works but without vector search).
 - **Same model for all tiers** — locally you'll typically run one model. The script sets it for all components. You can differentiate later in `config.toml` if you serve multiple models.
+- **No backup provider** — local mode uses a single server. If it goes down, Honcho's deriver queues work until it's back.
 
 ## Maintenance
 
