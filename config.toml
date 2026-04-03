@@ -48,6 +48,10 @@ DEFAULT_TTL_SECONDS = 300
 DEFAULT_MAX_TOKENS = 2500
 EMBEDDING_PROVIDER = "openrouter"
 
+# Dedicated embedding config — decoupled from backup LLM provider
+# Overridden by setup script based on user's provider choice
+EMBEDDING_BASE_URL = "https://openrouter.ai/api/v1"
+
 # Backup provider base URL (set in .env or overridden by setup script)
 OPENAI_COMPATIBLE_BASE_URL = "https://api.venice.ai/api/v1"
 

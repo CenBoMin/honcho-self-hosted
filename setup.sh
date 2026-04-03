@@ -135,13 +135,19 @@ else
             {
                 echo ""
                 echo "# Embeddings via cloud API (local server can't serve embedding models)"
-                echo "LLM_OPENAI_COMPATIBLE_API_KEY=${EMBED_KEY}"
+                echo "LLM_EMBEDDING_API_KEY=${EMBED_KEY}"
             } >> "$INSTALL_DIR/.env"
-            sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${EMBED_URL}\"|" "$INSTALL_DIR/config.toml"
+            sed -i "s|EMBEDDING_BASE_URL = .*|EMBEDDING_BASE_URL = \"${EMBED_URL}\"|" "$INSTALL_DIR/config.toml"
+            # OPENAI_COMPATIBLE still needed for client init
+            {
+                echo "LLM_OPENAI_COMPATIBLE_API_KEY=${LOCAL_KEY}"
+            } >> "$INSTALL_DIR/.env"
+            sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${LOCAL_URL}\"|" "$INSTALL_DIR/config.toml"
         else
             # Disable embeddings entirely
             sed -i 's|EMBED_MESSAGES = true|EMBED_MESSAGES = false|' "$INSTALL_DIR/config.toml"
             sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${LOCAL_URL}\"|" "$INSTALL_DIR/config.toml"
+            sed -i "s|EMBEDDING_BASE_URL = .*|EMBEDDING_BASE_URL = \"${LOCAL_URL}\"|" "$INSTALL_DIR/config.toml"
             {
                 echo ""
                 echo "LLM_OPENAI_COMPATIBLE_API_KEY=${LOCAL_KEY}"
@@ -192,25 +198,31 @@ else
             echo "LLM_OPENAI_API_KEY=${PRIMARY_KEY}"
         } > "$INSTALL_DIR/.env"
 
+        # Embeddings always route through primary provider (backup may not support embedding models)
+        {
+            echo ""
+            echo "# Embeddings via primary provider"
+            echo "LLM_EMBEDDING_API_KEY=${PRIMARY_KEY}"
+        } >> "$INSTALL_DIR/.env"
+        sed -i "s|EMBEDDING_BASE_URL = .*|EMBEDDING_BASE_URL = \"${PRIMARY_URL}\"|" "$INSTALL_DIR/config.toml"
+
         if [ -n "$BACKUP_KEY" ]; then
             read -rp "  Backup API base URL [https://api.venice.ai/api/v1]: " BACKUP_URL
             BACKUP_URL="${BACKUP_URL:-https://api.venice.ai/api/v1}"
             {
                 echo ""
-                echo "# Backup LLM provider + embeddings"
+                echo "# Backup LLM provider"
                 echo "LLM_OPENAI_COMPATIBLE_API_KEY=${BACKUP_KEY}"
             } >> "$INSTALL_DIR/.env"
             sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${BACKUP_URL}\"|" "$INSTALL_DIR/config.toml"
         else
             # No backup — remove backup provider references from config
             sed -i '/^BACKUP_PROVIDER/d; /^BACKUP_MODEL/d' "$INSTALL_DIR/config.toml"
-            # Route embeddings through primary provider instead
-            sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${PRIMARY_URL}\"|" "$INSTALL_DIR/config.toml"
             {
                 echo ""
-                echo "# Embeddings routed through primary provider (no backup configured)"
                 echo "LLM_OPENAI_COMPATIBLE_API_KEY=${PRIMARY_KEY}"
             } >> "$INSTALL_DIR/.env"
+            sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${PRIMARY_URL}\"|" "$INSTALL_DIR/config.toml"
         fi
     fi
 
