@@ -16,11 +16,10 @@ RUN pip install --no-cache-dir -e .
 # 安装 cloudevents 依赖（修复 telemetry 错误）
 RUN pip install --no-cache-dir cloudevents
 
-# 复制修复脚本
-COPY patches/fix_embedding_input_type.py /tmp/fix_embedding_input_type.py
-
-# 运行修复脚本
-RUN python3 /tmp/fix_embedding_input_type.py
+# 修复 NVIDIA 嵌入模型需要 input_type 参数的问题
+# 创建并运行修复脚本
+COPY patches/fix_embedding.py /tmp/fix_embedding.py
+RUN python3 /tmp/fix_embedding.py
 
 # 复制自定义配置
 COPY config.toml /app/config.toml

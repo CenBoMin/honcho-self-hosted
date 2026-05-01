@@ -16,29 +16,33 @@
 
 ✅ **修复2**: 添加 `cloudevents` 模块依赖，消除 telemetry 警告
 
-## 如何应用修复
+## 🚀 如何应用修复（Koyeb 部署）
 
-### 方式1：使用 docker-compose (推荐)
+### 方式1：修复 NVIDIA 模型 (当前方案)
 
+1. **推送代码变更到仓库**:
 ```bash
-cd honcho-self-hosted
-# 确保 .env 文件已正确配置
-cp env.example .env  # 如果需要，复制示例配置文件
-# 编辑 .env 文件设置您的 API 密钥
-nano .env
-
-# 重新构建和启动
-docker-compose build --no-cache
-docker-compose up -d
+git add .
+git commit -m "修复 NVIDIA embedding input_type 参数问题"
+git push origin main
 ```
 
-### 方式2：使用 Docker build
+2. **Koyeb 将自动重新构建和部署**
+3. **等待构建完成** - 在 Koyeb 控制台查看构建日志
+4. **验证修复** - 检查应用日志是否还有 input_type 错误
 
-```bash
-cd honcho-self-hosted
-docker build -t honcho-self-hosted .
-docker run -p 8000:8000 --env-file .env honcho-self-hosted
+### 方式2：切换到简单嵌入模型（推荐，更简单）
+
+如果您想避免复杂的修复，可以直接切换到不需要特殊参数的 LongCat 嵌入模型：
+
+**在 Koyeb 环境变量中修改**：
+```env
+EMBEDDING_MODEL_CONFIG__MODEL=text-embedding-004
+EMBEDDING_MODEL_CONFIG__TRANSPORT=openai
+EMBEDDING_MODEL_CONFIG__OVERRIDES__BASE_URL=https://api.longcat.chat/openai/v1
 ```
+
+这样就不需要任何代码修复了。
 
 ## 配置建议
 
